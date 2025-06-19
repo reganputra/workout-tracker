@@ -5,17 +5,23 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"workout-tracker/api"
 )
 
 type Application struct {
-	Logger *log.Logger
+	Logger         *log.Logger
+	WorkoutHandler *api.WorkoutHandler
 }
 
-// NewApplication creates a new Application instance with a logger.
 func NewLog() (*Application, error) {
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+
+	// Initialize the WorkoutHandler
+	workoutHandler := api.NewWorkoutHandler()
+
 	app := &Application{
-		Logger: logger,
+		Logger:         logger,
+		WorkoutHandler: workoutHandler,
 	}
 	return app, nil
 }
