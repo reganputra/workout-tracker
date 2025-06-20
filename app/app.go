@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"workout-tracker/api"
+	"workout-tracker/migrations"
 	"workout-tracker/store"
 )
 
@@ -22,7 +23,10 @@ func NewLog() (*Application, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to the database: %w", err)
 	}
-
+	err = store.MigrateFs(pgDb, migrations.FS, ".")
+	if err != nil {
+		panic(err)
+	}
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
 	// Initialize the WorkoutHandler
