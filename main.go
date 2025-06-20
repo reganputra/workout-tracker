@@ -13,6 +13,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer application.Db.Close()
 
 	// Start the application
 	application.Logger.Println("Application started successfully")

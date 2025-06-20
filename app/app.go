@@ -1,19 +1,28 @@
 package app
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"workout-tracker/api"
+	"workout-tracker/store"
 )
 
 type Application struct {
 	Logger         *log.Logger
 	WorkoutHandler *api.WorkoutHandler
+	Db             *sql.DB
 }
 
 func NewLog() (*Application, error) {
+
+	pgDb, err := store.Connect()
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to the database: %w", err)
+	}
+
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
 	// Initialize the WorkoutHandler
@@ -22,6 +31,7 @@ func NewLog() (*Application, error) {
 	app := &Application{
 		Logger:         logger,
 		WorkoutHandler: workoutHandler,
+		Db:             pgDb,
 	}
 	return app, nil
 }
