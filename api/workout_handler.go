@@ -10,11 +10,13 @@ import (
 )
 
 type WorkoutHandler struct {
-	store *store.WorkoutStore
+	workoutStore store.WorkoutStore
 }
 
-func NewWorkoutHandler() *WorkoutHandler {
-	return &WorkoutHandler{}
+func NewWorkoutHandler(workoutStore store.WorkoutStore) *WorkoutHandler {
+	return &WorkoutHandler{
+		workoutStore: workoutStore,
+	}
 }
 
 func (wh *WorkoutHandler) GetWorkoutById(w http.ResponseWriter, r *http.Request) {
@@ -38,4 +40,11 @@ func (wh *WorkoutHandler) HandleCreateWorkout(w http.ResponseWriter, r *http.Req
 		http.Error(w, "Failed to create workout", http.StatusInternalServerError)
 		return
 	}
+	createdWorkout, err := wh.workoutStore.CreateWorkout(&workout)
+	if err != nil {
+		http.Error(w, "Failed to create workout", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(createdWorkout)
 }

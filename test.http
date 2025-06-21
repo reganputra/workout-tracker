@@ -1,0 +1,29 @@
+### Create Wokrout
+POST http://localhost:1500/workouts
+Content-Type: application/json
+
+{
+  "title": "Morning Strength Training",
+  "description": "Full body strength training session",
+  "duration": 60,
+  "calories_burned": 500,
+  "entries": [
+    {
+      "exercise_name": "Squats",
+      "sets": 3,
+      "reps": 12,
+      "weight": 100.5,
+      "notes": "Felt strong today",
+      "order_index": 1
+    },
+    {
+      "exercise_name": "Bench Press",
+      "sets": 4,
+      "reps": 10,
+      "weight": 80.0,
+      "notes": "Increase weight next session",
+      "order_index": 2
+    }
+  ]
+}
+

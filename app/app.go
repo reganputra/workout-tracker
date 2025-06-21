@@ -29,8 +29,11 @@ func NewLog() (*Application, error) {
 	}
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
+	// Create the workout store
+	workoutStore := store.NewWorkoutStore(pgDb)
+
 	// Initialize the WorkoutHandler
-	workoutHandler := api.NewWorkoutHandler()
+	workoutHandler := api.NewWorkoutHandler(workoutStore)
 
 	app := &Application{
 		Logger:         logger,

@@ -17,33 +17,33 @@ type Workout struct {
 	Id              int            `json:"id"`
 	Title           string         `json:"title"`
 	Description     string         `json:"description"`
-	DurationMinutes int            `json:"duration_minutes"`
+	DurationMinutes int            `json:"duration"`
 	CaloriesBurned  int            `json:"calories_burned"`
 	Entries         []WorkoutEntry `json:"entries"`
 }
 
-type WorkoutStore struct {
+type PostgresWorkoutStore struct {
 	db *sql.DB
 }
 
-func NewWorkoutStore(db *sql.DB) *WorkoutStore {
-	return &WorkoutStore{
+func NewWorkoutStore(db *sql.DB) *PostgresWorkoutStore {
+	return &PostgresWorkoutStore{
 		db: db,
 	}
 }
 
-type WorkoutStoreInterface interface {
+type WorkoutStore interface {
 	CreateWorkout(*Workout) (*Workout, error)
 	GetWorkoutById(id int64) (*Workout, error)
 }
 
-func (ws *WorkoutStore) CreateWorkout(workout *Workout) (*Workout, error) {
+func (ws *PostgresWorkoutStore) CreateWorkout(workout *Workout) (*Workout, error) {
 	tx, err := ws.db.Begin()
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback()
-	query := "INSERT INTO workouts (title, description, duration_minutes, calories_burned) VALUES ($1, $2, $3, $4) RETURNING id"
+	query := "INSERT INTO workout (title, description, duration, calories_burned) VALUES ($1, $2, $3, $4) RETURNING id"
 
 	err = tx.QueryRow(query, workout.Title, workout.Description, workout.DurationMinutes, workout.CaloriesBurned).Scan(&workout.Id)
 	if err != nil {
@@ -64,8 +64,8 @@ func (ws *WorkoutStore) CreateWorkout(workout *Workout) (*Workout, error) {
 	return workout, nil
 }
 
-func (ws *WorkoutStore) GetWorkoutById(id int64) (*Workout, error) {
-	query := "SELECT id, title, description, duration_minutes, calories_burned FROM workouts WHERE id = $1"
+func (ws *PostgresWorkoutStore) GetWorkoutById(id int64) (*Workout, error) {
+	query := "SELECT id, title, description, duration, calories_burned FROM workout WHERE id = $1"
 	workout := &Workout{}
 	err := ws.db.QueryRow(query, id).Scan(&workout.Id, &workout.Title, &workout.Description, &workout.DurationMinutes, &workout.CaloriesBurned)
 	if err != nil {
