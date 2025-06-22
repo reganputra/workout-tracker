@@ -27,3 +27,31 @@ Content-Type: application/json
   ]
 }
 
+### Update Workout
+PUT http://localhost:1500/workouts/4
+Content-Type: application/json
+
+{
+  "title": "Morning Strength Training - Updated",
+  "description": "Updated full body strength training session",
+  "duration": 65,
+  "calories_burned": 520,
+  "entries": [
+    {
+      "exercise_name": "Squats",
+      "sets": 3,
+      "reps": 12,
+      "weight": 105.0,
+      "notes": "Felt strong today, increased weight",
+      "order_index": 1
+    },
+    {
+      "exercise_name": "Bench Press",
+      "sets": 4,
+      "reps": 10,
+      "weight": 85.0,
+      "notes": "Increased weight as planned",
+      "order_index": 2
+    }
+  ]
+}
