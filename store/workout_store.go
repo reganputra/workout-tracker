@@ -35,6 +35,7 @@ func NewWorkoutStore(db *sql.DB) *PostgresWorkoutStore {
 type WorkoutStore interface {
 	CreateWorkout(*Workout) (*Workout, error)
 	GetWorkoutById(id int64) (*Workout, error)
+	UpdateWorkout(*Workout) error
 }
 
 func (ws *PostgresWorkoutStore) CreateWorkout(workout *Workout) (*Workout, error) {
@@ -68,12 +69,17 @@ func (ws *PostgresWorkoutStore) GetWorkoutById(id int64) (*Workout, error) {
 	query := "SELECT id, title, description, duration, calories_burned FROM workout WHERE id = $1"
 	workout := &Workout{}
 	err := ws.db.QueryRow(query, id).Scan(&workout.Id, &workout.Title, &workout.Description, &workout.DurationMinutes, &workout.CaloriesBurned)
+
+	if err == sql.ErrNoRows {
+		return nil, nil // No workout found
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	query = "SELECT id, exercise_name, sets, reps, duration_seconds, weight, notes, order_index FROM workout_entries WHERE workout_id = $1 ORDER BY order_index"
-	rows, err := ws.db.Query(query, id)
+	entryQuery := "SELECT id, exercise_name, sets, reps, duration_seconds, weight, notes, order_index FROM workout_entries WHERE workout_id = $1 ORDER BY order_index"
+	rows, err := ws.db.Query(entryQuery, id)
 	if err != nil {
 		return nil, err
 	}
@@ -89,4 +95,40 @@ func (ws *PostgresWorkoutStore) GetWorkoutById(id int64) (*Workout, error) {
 	}
 
 	return workout, nil
+}
+
+func (ws *PostgresWorkoutStore) UpdateWorkout(workout *Workout) error {
+	tx, err := ws.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	query := "UPDATE workout SET title = $1, description = $2, duration = $3, calories_burned = $4 WHERE id = $5"
+	result, err := tx.Exec(query, workout.Title, workout.Description, workout.DurationMinutes, workout.CaloriesBurned, workout.Id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return sql.ErrNoRows // No workout found to update
+	}
+
+	_, err = tx.Exec("DELETE FROM workout_entries WHERE workout_id = $1", workout.Id)
+	if err != nil {
+		return err
+	}
+	for _, entry := range workout.Entries {
+		query := "INSERT INTO workout_entries (workout_id, exercise_name, sets, reps, duration_seconds, weight, notes, order_index) " +
+			"VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id"
+		_, err = tx.Exec(query, workout.Id, entry.ExerciseName, entry.Sets, entry.Reps, entry.DurationSeconds, entry.Weight, entry.Notes, entry.OrderIndex)
+		if err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
 }
