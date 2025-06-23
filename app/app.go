@@ -8,6 +8,7 @@ import (
 	"os"
 	"workout-tracker/api"
 	"workout-tracker/migrations"
+	"workout-tracker/response"
 	"workout-tracker/store"
 )
 
@@ -27,13 +28,18 @@ func NewLog() (*Application, error) {
 	if err != nil {
 		panic(err)
 	}
+
+	// Create logger
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+
+	// Initialize response package logger
+	response.InitLogger(logger)
 
 	// Create the workout store
 	workoutStore := store.NewWorkoutStore(pgDb)
 
 	// Initialize the WorkoutHandler
-	workoutHandler := api.NewWorkoutHandler(workoutStore)
+	workoutHandler := api.NewWorkoutHandler(workoutStore, logger)
 
 	app := &Application{
 		Logger:         logger,
