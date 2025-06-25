@@ -28,7 +28,7 @@ Content-Type: application/json
 }
 
 ### Update Workout
-PUT http://localhost:1500/workouts/4
+PUT http://localhost:1500/workouts/5
 Content-Type: application/json
 
 {
@@ -55,3 +55,9 @@ Content-Type: application/json
     }
   ]
 }
+
+### Get Workout by ID
+GET http://localhost:1500/workouts/6
+
+### Delete Workout
+DELETE http://localhost:1500/workouts/5
