@@ -1,0 +1,87 @@
+package store
+
+import (
+	"database/sql"
+	"time"
+)
+
+type password struct {
+	plainText string
+	hash      []byte
+}
+
+type User struct {
+	Id           int       `json:"id"`
+	UserName     string    `json:"username"`
+	Email        string    `json:"email"`
+	PasswordHash password  `json:"-"`
+	Bio          string    `json:"bio"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+type PostgresUserStore struct {
+	db *sql.DB
+}
+
+func NewPostgresUserStore(db *sql.DB) *PostgresUserStore {
+	return &PostgresUserStore{db: db}
+}
+
+type UserStore interface {
+	CreateUser(*User) error
+	GetUserByName(username string) (*User, error)
+	UpdateUser(*User) error
+}
+
+func (store *PostgresUserStore) CreateUser(user *User) error {
+	query := "INSERT INTO users (username, email, password_hash, bio) VALUES ($1, $2, $3, $4, ) RETURNING id, created_at, updated_at"
+
+	err := store.db.QueryRow(query, user.UserName, user.Email, user.PasswordHash.hash, user.Bio).Scan(&user.Id, &user.CreatedAt, &user.UpdatedAt)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (store *PostgresUserStore) GetUserByName(username string) (*User, error) {
+	user := &User{
+		PasswordHash: password{},
+	}
+	query := "SELECT id, username, email, password_hash, bio, created_at, updated_at FROM users WHERE username = $1"
+
+	err := store.db.QueryRow(query, username).Scan(&user.Id,
+		&user.UserName,
+		&user.Email,
+		&user.PasswordHash.hash,
+		&user.Bio,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (store *PostgresUserStore) UpdateUser(user *User) error {
+	query := "UPDATE users SET username = $1, email = $2, bio = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4, RETURNING updated_at"
+
+	result, err := store.db.Exec(query, user.UserName, user.Email, user.Bio, user.Id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
