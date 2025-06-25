@@ -32,6 +32,13 @@ type WorkoutResponse struct {
 	UpdatedFields interface{} `json:"updated_fields,omitempty"`
 }
 
+type UserResponse struct {
+	ID       int    `json:"id"`
+	UserName string `json:"username"`
+	Email    string `json:"email"`
+	Bio      string `json:"bio"`
+}
+
 // JSON sends a JSON response with the given status code
 func JSON(w http.ResponseWriter, statusCode int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
@@ -166,4 +173,18 @@ func WorkoutCreated(w http.ResponseWriter, workout interface{}) {
 	}
 
 	Created(w, "Workout successfully created", workout)
+}
+
+func UserCreated(w http.ResponseWriter, user interface{}) {
+	if logger != nil {
+		logger.Printf("User created")
+	}
+	Created(w, "User successfully created", user)
+}
+
+func UserUpdated(w http.ResponseWriter, user interface{}) {
+	if logger != nil {
+		logger.Printf("User updated")
+	}
+	Success(w, "User successfully updated", user)
 }
