@@ -3,6 +3,8 @@ package testing
 import (
 	"database/sql"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 	"workout-tracker/store"
 )
@@ -14,7 +16,7 @@ func setupTestDB(t *testing.T) *sql.DB {
 	}
 
 	// run migrations for testing
-	err = store.Migrate(db, "migrations")
+	err = store.Migrate(db, "../migrations")
 	if err != nil {
 		t.Fatalf("Failed to run test db migrations: %v", err)
 	}
@@ -70,6 +72,59 @@ func TestCreateWorkout(t *testing.T) {
 			wantErr: false,
 		},
 		// can add more test cases here, such as invalid workouts
+		{
+			name: "Create invalid workout",
+			workout: &store.Workout{
+				Title:           "Push up day",
+				Description:     "Complete upper body day",
+				DurationMinutes: 90,
+				CaloriesBurned:  300,
+				Entries: []store.WorkoutEntry{
+					{
+						ExerciseName: "Plank",
+						Sets:         2,
+						Reps:         IntPtr(60),
+						Notes:        "Keep form",
+						OrderIndex:   1,
+					},
+					{
+						ExerciseName:    "Squats",
+						Sets:            4,
+						Reps:            IntPtr(10),
+						DurationSeconds: IntPtr(60),
+						Weight:          Float64Ptr(140.5),
+						Notes:           "Focus on depth",
+						OrderIndex:      2,
+					},
+				},
+			},
+			wantErr: true, // This should fail because the duration is too long for a workout with only 2 entries
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := init.CreateWorkout(tt.workout)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.workout.Title, got.Title)
+			assert.Equal(t, tt.workout.Description, got.Description)
+			assert.Equal(t, tt.workout.DurationMinutes, got.DurationMinutes)
+
+			retrieved, err := init.GetWorkoutById(int64(got.Id))
+			require.NoError(t, err)
+
+			assert.Equal(t, tt.workout.Title, retrieved.Title)
+			assert.Equal(t, len(tt.workout.Entries), len(retrieved.Entries))
+
+			for i := range retrieved.Entries {
+				assert.Equal(t, tt.workout.Entries[i].ExerciseName, retrieved.Entries[i].ExerciseName)
+				assert.Equal(t, tt.workout.Entries[i].Sets, retrieved.Entries[i].Sets)
+				assert.Equal(t, tt.workout.Entries[i].OrderIndex, retrieved.Entries[i].OrderIndex)
+			}
+		})
 	}
 }
 
