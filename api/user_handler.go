@@ -67,6 +67,7 @@ func (uh *UserHandler) HandleRegisterUser(w http.ResponseWriter, r *http.Request
 	user := &store.User{
 		UserName: userReq.UserName,
 		Email:    userReq.Email,
+		Bio:      userReq.Bio,
 	}
 
 	if userReq.Bio == "" {
