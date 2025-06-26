@@ -61,3 +61,24 @@ GET http://localhost:1500/workouts/6
 
 ### Delete Workout
 DELETE http://localhost:1500/workouts/5
+
+### Register User
+POST http://localhost:1500/users
+Content-Type: application/json
+
+{
+  "username": "jack_marston",
+  "email": "jack.marston@example.com",
+  "password": "password12345",
+  "bio": "Fitness enthusiast and software developer"
+}
+
+
+### Authenticate User
+POST http://localhost:1500/tokens/authentication
+Content-Type: application/json
+
+{
+  "username": "jack_marston",
+  "password": "password12345"
+}
