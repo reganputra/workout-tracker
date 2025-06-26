@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"time"
@@ -38,12 +39,18 @@ func (th *TokenHandler) HandleCreateToken(w http.ResponseWriter, r *http.Request
 
 	user, err := th.userStore.GetUserByName(tokenReq.Username)
 	if err != nil || user == nil {
+		if err == nil {
+			err = errors.New("user not found")
+		}
 		response.InternalServerError(w, "Invalid username", err)
 		return
 	}
 
 	passwordMatch, err := user.PasswordHash.Check(tokenReq.Password)
 	if err != nil || !passwordMatch {
+		if err == nil {
+			err = errors.New("password does not match")
+		}
 		response.InternalServerError(w, "Invalid password", err)
 		return
 	}
