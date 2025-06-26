@@ -64,7 +64,7 @@ type UserStore interface {
 	CreateUser(*User) error
 	GetUserByName(username string) (*User, error)
 	UpdateUser(*User) error
-	GetUserToken(scope, tokenPlaintTextPassword string) (*User, error)
+	GetUserToken(scope, tokenPlaintextPassword string) (*User, error)
 }
 
 func (store *PostgresUserStore) CreateUser(user *User) error {
@@ -119,8 +119,8 @@ func (store *PostgresUserStore) UpdateUser(user *User) error {
 	return nil
 }
 
-func (store *PostgresUserStore) GetUserToken(scope, tokenPlaintTextPassword string) (*User, error) {
-	tokenHash := sha256.Sum256([]byte(tokenPlaintTextPassword))
+func (store *PostgresUserStore) GetUserToken(scope, tokenPlaintextPassword string) (*User, error) {
+	tokenHash := sha256.Sum256([]byte(tokenPlaintextPassword))
 	query := "SELECT u.id, u.username, u.email, u.password_hash, u.bio, u.created_at, u.updated_at " +
 		"FROM users u INNER JOIN tokens t ON t.user_id = u.id WHERE t.hash = $1 AND t.scopes = $2 AND t.expired > $3"
 
