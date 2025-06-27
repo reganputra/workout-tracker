@@ -1,12 +1,33 @@
-### Create Wokrout
+##$ Create a new user
+POST http://localhost:1500/users
+Content-Type: application/json
+
+{
+  "username": "robin",
+  "email": "robin@example.com",
+  "password": "robin12345",
+  "bio": "Test user for workout tracking"
+}
+
+### Authenticate the user
+POST http://localhost:1500/tokens/authentication
+Content-Type: application/json
+
+{
+  "username": "robin",
+  "password": "robin12345"
+}
+
+### Create a new workout
 POST http://localhost:1500/workouts
+Authorization: Bearer ZHJJD432W7XYRYGHS27WYXAELVBVTONOQK7SU6VRL3WFGWZFI7KQ
 Content-Type: application/json
 
 {
   "title": "Morning Strength Training",
   "description": "Full body strength training session",
-  "duration": 60,
-  "calories_burned": 500,
+  "duration": 45,
+  "calories_burned": 350,
   "entries": [
     {
       "exercise_name": "Squats",
@@ -23,62 +44,14 @@ Content-Type: application/json
       "weight": 80.0,
       "notes": "Increase weight next session",
       "order_index": 2
-    }
-  ]
-}
-
-### Update Workout
-PUT http://localhost:1500/workouts/5
-Content-Type: application/json
-
-{
-  "title": "Morning Strength Training - Updated",
-  "description": "Updated full body strength training session",
-  "duration": 65,
-  "calories_burned": 520,
-  "entries": [
-    {
-      "exercise_name": "Squats",
-      "sets": 3,
-      "reps": 12,
-      "weight": 105.0,
-      "notes": "Felt strong today, increased weight",
-      "order_index": 1
     },
     {
-      "exercise_name": "Bench Press",
-      "sets": 4,
-      "reps": 10,
-      "weight": 85.0,
-      "notes": "Increased weight as planned",
-      "order_index": 2
+      "exercise_name": "Deadlifts",
+      "sets": 3,
+      "reps": 8,
+      "weight": 120.0,
+      "notes": "Good form maintained",
+      "order_index": 3
     }
   ]
-}
-
-### Get Workout by ID
-GET http://localhost:1500/workouts/6
-
-### Delete Workout
-DELETE http://localhost:1500/workouts/5
-
-### Register User
-POST http://localhost:1500/users
-Content-Type: application/json
-
-{
-  "username": "jack_marston",
-  "email": "jack.marston@example.com",
-  "password": "password12345",
-  "bio": "Fitness enthusiast and software developer"
-}
-
-
-### Authenticate User
-POST http://localhost:1500/tokens/authentication
-Content-Type: application/json
-
-{
-  "username": "jack_marston",
-  "password": "password12345"
 }

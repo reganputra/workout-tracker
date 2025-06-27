@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"workout-tracker/api"
+	"workout-tracker/middleware"
 	"workout-tracker/migrations"
 	"workout-tracker/response"
 	"workout-tracker/store"
@@ -17,6 +18,7 @@ type Application struct {
 	WorkoutHandler *api.WorkoutHandler
 	UserHandler    *api.UserHandler
 	TokenHandler   *api.TokenHandler
+	Middleware     middleware.UserMiddleware
 	Db             *sql.DB
 }
 
@@ -50,12 +52,15 @@ func NewLog() (*Application, error) {
 	userHandler := api.NewUserHandler(userStore, logger)
 	// Initialize the TokenHandler
 	tokenHandler := api.NewTokenHandler(tokenStore, userStore, logger)
+	// Initialize the UserMiddleware
+	middlewareHandler := middleware.UserMiddleware{UserStore: userStore}
 
 	app := &Application{
 		Logger:         logger,
 		WorkoutHandler: workoutHandler,
 		UserHandler:    userHandler,
 		TokenHandler:   tokenHandler,
+		Middleware:     middlewareHandler,
 		Db:             pgDb,
 	}
 	return app, nil

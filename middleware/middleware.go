@@ -9,7 +9,7 @@ import (
 )
 
 type UserMiddleware struct {
-	userStore store.UserStore
+	UserStore store.UserStore
 }
 
 type contextKey string
@@ -24,7 +24,7 @@ func SetUser(r *http.Request, user *store.User) *http.Request {
 func GetUser(r *http.Request) *store.User {
 	user, ok := r.Context().Value(userContextKey).(*store.User)
 	if !ok {
-		panic("user not found in request")
+		return nil
 	}
 	return user
 }
@@ -46,7 +46,7 @@ func (um *UserMiddleware) Authenticate(next http.Handler) http.Handler {
 			return
 		}
 		token := headerParts[1]
-		user, err := um.userStore.GetUserToken(tokens.ScopeAuth, token)
+		user, err := um.UserStore.GetUserToken(tokens.ScopeAuth, token)
 		if err != nil {
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
@@ -59,4 +59,17 @@ func (um *UserMiddleware) Authenticate(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 		return
 	})
+}
+
+func (um *UserMiddleware) RequireUser(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := GetUser(r)
+
+		if user.IsAnonymous() {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	}
 }

@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"errors"
+	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 )
@@ -101,7 +102,7 @@ func (store *PostgresUserStore) GetUserByName(username string) (*User, error) {
 }
 
 func (store *PostgresUserStore) UpdateUser(user *User) error {
-	query := "UPDATE users SET username = $1, email = $2, bio = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4, RETURNING updated_at"
+	query := "UPDATE users SET username = $1, email = $2, bio = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4 RETURNING updated_at"
 
 	result, err := store.db.Exec(query, user.UserName, user.Email, user.Bio, user.Id)
 	if err != nil {
@@ -121,8 +122,13 @@ func (store *PostgresUserStore) UpdateUser(user *User) error {
 
 func (store *PostgresUserStore) GetUserToken(scope, tokenPlaintextPassword string) (*User, error) {
 	tokenHash := sha256.Sum256([]byte(tokenPlaintextPassword))
+
+	fmt.Printf("Looking for token with scope: %s\n", scope)
+	fmt.Printf("Token hash: %x\n", tokenHash[:])
+	fmt.Printf("Current time: %v\n", time.Now())
+
 	query := "SELECT u.id, u.username, u.email, u.password_hash, u.bio, u.created_at, u.updated_at " +
-		"FROM users u INNER JOIN tokens t ON t.user_id = u.id WHERE t.hash = $1 AND t.scopes = $2 AND t.expired > $3"
+		"FROM users u INNER JOIN tokens t ON t.user_id = u.id WHERE t.hash = $1 AND t.scope = $2 AND t.expired > $3"
 
 	user := &User{
 		PasswordHash: password{},
@@ -137,10 +143,13 @@ func (store *PostgresUserStore) GetUserToken(scope, tokenPlaintextPassword strin
 		&user.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
+		fmt.Println("No token found in database")
 		return nil, nil
 	}
 	if err != nil {
+		fmt.Printf("Database error: %v\n", err)
 		return nil, err
 	}
+	fmt.Printf("Found user: %s\n", user.UserName)
 	return user, nil
 }

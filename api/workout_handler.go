@@ -61,8 +61,10 @@ func (wh *WorkoutHandler) HandleCreateWorkout(w http.ResponseWriter, r *http.Req
 	}
 
 	currenUser := middleware.GetUser(r)
+	wh.logger.Printf("User from context: %+v", currenUser)
 	if currenUser == nil || currenUser == store.AnonymousUser {
-		response.BadRequest(w, "User must be login to create a workout", nil)
+		wh.logger.Println("No authenticated user found")
+		http.Error(w, "Authentication required", http.StatusUnauthorized)
 		return
 	}
 	workout.UserId = currenUser.Id

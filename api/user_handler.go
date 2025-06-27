@@ -70,10 +70,6 @@ func (uh *UserHandler) HandleRegisterUser(w http.ResponseWriter, r *http.Request
 		Bio:      userReq.Bio,
 	}
 
-	if userReq.Bio == "" {
-		user.Bio = userReq.Bio
-	}
-
 	err = user.PasswordHash.Set(userReq.Password)
 	if err != nil {
 		response.InternalServerError(w, "Failed hashing password", err)

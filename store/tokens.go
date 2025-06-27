@@ -40,6 +40,6 @@ func (s *PostgresTokenStore) Insert(token *tokens.Token) error {
 
 func (s *PostgresTokenStore) DeleteAllTokens(userId int, scope string) error {
 	query := `DELETE FROM tokens WHERE scope = $1 AND user_id = $2`
-	_, err := s.db.Exec(query, userId, scope)
+	_, err := s.db.Exec(query, scope, userId)
 	return err
 }
