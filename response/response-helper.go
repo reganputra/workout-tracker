@@ -32,6 +32,7 @@ type WorkoutResponse struct {
 	UpdatedFields interface{} `json:"updated_fields,omitempty"`
 }
 
+// UserResponse contains user-specific response data
 type UserResponse struct {
 	ID       int    `json:"id"`
 	UserName string `json:"username"`
@@ -187,4 +188,17 @@ func UserUpdated(w http.ResponseWriter, user interface{}) {
 		logger.Printf("User updated")
 	}
 	Success(w, "User successfully updated", user)
+}
+
+func Forbidden(w http.ResponseWriter, sprintf string) {
+	if logger != nil {
+		logger.Printf("Forbidden: %s", sprintf)
+	}
+
+	resp := ErrorResponse{
+		Success: false,
+		Message: sprintf,
+		Error:   "Forbidden",
+	}
+	JSON(w, http.StatusForbidden, resp)
 }
