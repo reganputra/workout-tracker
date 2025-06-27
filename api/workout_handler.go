@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"workout-tracker/middleware"
 	"workout-tracker/response"
 	"workout-tracker/store"
 )
@@ -58,6 +59,13 @@ func (wh *WorkoutHandler) HandleCreateWorkout(w http.ResponseWriter, r *http.Req
 		response.BadRequest(w, "Failed to decode workout data", err)
 		return
 	}
+
+	currenUser := middleware.GetUser(r)
+	if currenUser == nil || currenUser == store.AnonymousUser {
+		response.BadRequest(w, "User must be login to create a workout", nil)
+		return
+	}
+	workout.UserId = currenUser.Id
 
 	createdWorkout, err := wh.workoutStore.CreateWorkout(&workout)
 	if err != nil {
@@ -137,6 +145,23 @@ func (wh *WorkoutHandler) HandleUpdateWorkout(w http.ResponseWriter, r *http.Req
 		updatedFields["entries"] = "Updated workout entries"
 	}
 
+	currenUser := middleware.GetUser(r)
+	if currenUser == nil || currenUser == store.AnonymousUser {
+		response.BadRequest(w, "User must be login to update a workout", nil)
+		return
+	}
+
+	workoutOwner, err := wh.workoutStore.GetWorkoutOwner(workoutId)
+	if err != nil {
+		response.InternalServerError(w, fmt.Sprintf("Failed to get workout owner for ID %d", workoutId), err)
+		return
+	}
+
+	if workoutOwner != currenUser.Id {
+		response.Forbidden(w, fmt.Sprintf("User %d is not authorized to update workout %d", currenUser.Id, workoutId))
+		return
+	}
+
 	err = wh.workoutStore.UpdateWorkout(existingWorkout)
 	if err != nil {
 		response.InternalServerError(w, fmt.Sprintf("Failed to update workout with ID %d", workoutId), err)
@@ -156,6 +181,22 @@ func (wh *WorkoutHandler) HandleDeleteWorkout(w http.ResponseWriter, r *http.Req
 	workoutId, err := strconv.ParseInt(params, 10, 64)
 	if err != nil {
 		response.NotFound(w, "Invalid workout ID format")
+		return
+	}
+
+	// Check if the workout exists
+	currenUser := middleware.GetUser(r)
+	if currenUser == nil || currenUser == store.AnonymousUser {
+		response.BadRequest(w, "User must be login to delete a workout", nil)
+		return
+	}
+	workoutOwner, err := wh.workoutStore.GetWorkoutOwner(workoutId)
+	if err != nil {
+		response.InternalServerError(w, fmt.Sprintf("Failed to get workout owner for ID %d", workoutId), err)
+		return
+	}
+	if workoutOwner != currenUser.Id {
+		response.Forbidden(w, fmt.Sprintf("User %d is not authorized to delete workout %d", currenUser.Id, workoutId))
 		return
 	}
 
